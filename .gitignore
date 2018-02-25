@@ -1,0 +1,6 @@
+# Ignore Everything
+*
+
+# Main Java File To Save
+!JNotePad.java
+!.gitignore
