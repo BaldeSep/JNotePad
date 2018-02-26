@@ -8,7 +8,9 @@ public class JNotePad extends JFrame{
 	// Text field
 	static JTextArea pad;
 	
-	static final JFileChooser saveFileChooser = new JFileChooser();
+	static final JFileChooser saveFileChooser = new JFileChooser(System.getProperty("user.dir"));
+	
+	static File currentWorkingFile;
 	
 	JNotePad(){
 		// Initializes the JFrame
@@ -16,6 +18,9 @@ public class JNotePad extends JFrame{
 		setSize(500, 500);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new GridLayout(1, 1));
+		
+		// Initialize currentWorkingFile to null
+		currentWorkingFile = null;
 		
 		JMenuBar menuBar = new JMenuBar();
 		
@@ -169,7 +174,7 @@ public class JNotePad extends JFrame{
 			}catch(IOException e){
 				System.out.println(e);
 			}
-		}else{
+		}else if(result == JFileChooser.ERROR_OPTION){
 			JOptionPane.showMessageDialog(this, "Document Could Not be Saved", "Error",  JOptionPane.ERROR_MESSAGE);
 		}
 	}
