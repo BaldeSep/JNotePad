@@ -143,6 +143,11 @@ public class JNotePad extends JFrame{
 			
 		// SAVEAS Menu Item
 		JMenuItem saveAs = new JMenuItem("Save As...");
+		saveAs.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae){
+				saveAsDocument();
+			}
+		});
 		
 		// PAGESETUP Menu Item
 		JMenuItem pageSetUp = new JMenuItem("Page Setup...");
@@ -186,6 +191,26 @@ public class JNotePad extends JFrame{
 			}
 		}else{
 			writeFile(currentWorkingFile);
+		}
+	}
+	
+	public void saveAsDocument(){
+		int result = saveFileChooser.showSaveDialog(this);
+			
+		if(result == JFileChooser.APPROVE_OPTION){
+			currentWorkingFile = saveFileChooser.getSelectedFile();
+				
+			if(checkIfFileAlreadyExists(currentWorkingFile) == true){
+				if(askUserToOverwriteFile() == true){
+					writeFile(currentWorkingFile);
+				}else{
+					currentWorkingFile = null;
+				}
+			}else{
+				writeFile(currentWorkingFile);
+			}
+		}else if(result == JFileChooser.ERROR_OPTION){
+			JOptionPane.showMessageDialog(this, "Document Could Not be Saved", "Error",  JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
