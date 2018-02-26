@@ -9,6 +9,8 @@ public class JNotePad extends JFrame{
 	static JTextArea pad;
 	
 	static final JFileChooser saveFileChooser = new JFileChooser(System.getProperty("user.dir"));
+	static final JFileChooser openFileChooser = new JFileChooser(System.getProperty("user.dir"));
+	
 	
 	static File currentWorkingFile;
 	
@@ -168,26 +170,48 @@ public class JNotePad extends JFrame{
 			int result = saveFileChooser.showSaveDialog(this);
 			
 			if(result == JFileChooser.APPROVE_OPTION){
-				try{
-					currentWorkingFile = saveFileChooser.getSelectedFile();
-					FileWriter writer = new FileWriter(currentWorkingFile);
-					writer.write(pad.getText());
-					writer.close();
-				}catch(IOException e){
-					System.out.println(e);
+				currentWorkingFile = saveFileChooser.getSelectedFile();
+					
+				if(checkIfFileAlreadyExists(currentWorkingFile) == true){
+					if(askUserToOverwriteFile() == true){
+						writeFile(currentWorkingFile);
+					}else{
+						currentWorkingFile = null;
+					}
+				}else{
+					writeFile(currentWorkingFile);
 				}
 			}else if(result == JFileChooser.ERROR_OPTION){
 				JOptionPane.showMessageDialog(this, "Document Could Not be Saved", "Error",  JOptionPane.ERROR_MESSAGE);
 			}
 		}else{
-			try{
-				FileWriter writer = new FileWriter(currentWorkingFile);
-				writer.write(pad.getText());
-				writer.close();
-			}catch(IOException e){
-				System.out.println(e);
-			}
+			writeFile(currentWorkingFile);
 		}
+	}
+	
+	public boolean checkIfFileAlreadyExists(File file){
+		return file.exists();
+	}
+	
+	public boolean askUserToOverwriteFile(){
+		int result = JOptionPane.showConfirmDialog(saveFileChooser, "File Already Exists!", 
+				"Overwrite File?", JOptionPane.YES_NO_OPTION);
+		if(result == JOptionPane.YES_OPTION){
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public void writeFile(File file){
+		try{
+			FileWriter writer = new FileWriter(file);
+			writer.write(pad.getText());
+			writer.close();
+		}catch(IOException e){
+			System.out.println(e);
+		}
+	
 	}
 	
 	public void addMenuItemsToFileMenu(JMenu menu, JMenuItem[] items){
