@@ -164,18 +164,29 @@ public class JNotePad extends JFrame{
 	}
 	
 	public void saveDocument(){
-		int result = saveFileChooser.showSaveDialog(this);
-		
-		if(result == JFileChooser.APPROVE_OPTION){
+		if (currentWorkingFile == null){
+			int result = saveFileChooser.showSaveDialog(this);
+			
+			if(result == JFileChooser.APPROVE_OPTION){
+				try{
+					currentWorkingFile = saveFileChooser.getSelectedFile();
+					FileWriter writer = new FileWriter(currentWorkingFile);
+					writer.write(pad.getText());
+					writer.close();
+				}catch(IOException e){
+					System.out.println(e);
+				}
+			}else if(result == JFileChooser.ERROR_OPTION){
+				JOptionPane.showMessageDialog(this, "Document Could Not be Saved", "Error",  JOptionPane.ERROR_MESSAGE);
+			}
+		}else{
 			try{
-				FileWriter writer = new FileWriter(saveFileChooser.getSelectedFile());
+				FileWriter writer = new FileWriter(currentWorkingFile);
 				writer.write(pad.getText());
 				writer.close();
 			}catch(IOException e){
 				System.out.println(e);
 			}
-		}else if(result == JFileChooser.ERROR_OPTION){
-			JOptionPane.showMessageDialog(this, "Document Could Not be Saved", "Error",  JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
