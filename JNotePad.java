@@ -1,20 +1,33 @@
 import javax.swing.*;
+import javax.swing.event.*;
 import java.io.*;
+import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
 
 public class JNotePad extends JFrame{
 
+	// Flag to check if document has changed
+	private static boolean changed;
+	
 	// Text field
-	static JTextArea pad;
+	private JTextArea pad;
 	
-	static final JFileChooser saveFileChooser = new JFileChooser(System.getProperty("user.dir"));
-	static final JFileChooser openFileChooser = new JFileChooser(System.getProperty("user.dir"));
+	// File Choosers for opening and closing files
+	private JFileChooser saveFileChooser;
+	private JFileChooser openFileChooser;
 	
 	
-	static File currentWorkingFile;
+	private File currentWorkingFile;
 	
 	JNotePad(){
+		// Has the document been changed?
+		changed = false;
+		
+		// Initialize JFileChooser Objects
+		saveFileChooser = new JFileChooser(System.getProperty("user.dir"));
+		openFileChooser = new JFileChooser(System.getProperty("user.dir"));
+		
 		// Initializes the JFrame
 		setTitle("JNotePad");
 		setSize(500, 500);
@@ -24,22 +37,40 @@ public class JNotePad extends JFrame{
 		// Initialize currentWorkingFile to null
 		currentWorkingFile = null;
 		
+		// Creates The Menu Bar and sets the JMenuBar of the JFrame
 		JMenuBar menuBar = new JMenuBar();
-		
 		JMenu[] menus = createMenus();
-		
 		addMenusToMenuBar(menuBar, menus);
+		setJMenuBar(menuBar);
 		
+		// Default Font Style and size
+		Font defaultFont = new Font("Courier", Font.PLAIN, 12);
+		
+		// This is the area that you type text into
 		pad = new JTextArea();
+		pad.getDocument().addDocumentListener(new DocumentListener() {
+			public void insertUpdate(DocumentEvent e){
+				changed = true;
+			}
+			public void removeUpdate(DocumentEvent e){
+				changed = true;
+			}
+			public void changedUpdate(DocumentEvent e){
+				changed = true;
+			}
+		});
+		pad.setFont(defaultFont);
 		
+		// Scroll pane will hold the pad
 		JScrollPane scrollPane = new JScrollPane(pad);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		
 		add(scrollPane);
-		setJMenuBar(menuBar);
 		
+		// Centers the window
 		setLocationRelativeTo(null);
+		
+		// Sets the frame visible
 		setVisible(true);
 	
 	}
@@ -119,19 +150,47 @@ public class JNotePad extends JFrame{
 		
 	}
 	
+	public void resetPad(){
+		pad.setText("");
+		currentWorkingFile = null;
+		changed = false;	
+	}
 	public JMenuItem[] createFileMenuItems(){
 		// NEWITEM Menu Item
 		JMenuItem newItem = new JMenuItem("New");
 		newItem.setAccelerator(
 			KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_MASK));
+		newItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae){
+				if(changed == true){
+					int userChoice = askUserToSaveDoc();
+					if(userChoice == JOptionPane.YES_OPTION){
+						saveAsDocument();
+						resetPad();
+					}else if(userChoice == JOptionPane.NO_OPTION){
+						resetPad();
+					}
+				}else{
+					resetPad();
+				}
+			}
+		});
 		
 		// OPEN Menu Item
 		JMenuItem open = new JMenuItem("Open...");
 		open.setAccelerator(
 			KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
-		
+		open.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae){
+				String data = openDocument();
+				if(data != null){
+					loadDataToPad(data);
+				}else{
+					
+				}
+			}
+		});
 		// SAVE Menu Item
-		
 		JMenuItem save = new JMenuItem("Save");
 		save.setAccelerator(
 			KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
@@ -152,6 +211,11 @@ public class JNotePad extends JFrame{
 		// PAGESETUP Menu Item
 		JMenuItem pageSetUp = new JMenuItem("Page Setup...");
 		
+		// PRINT Menu Item
+		JMenuItem print = new JMenuItem("Print...");
+		print.setAccelerator(
+			KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_MASK));
+		
 		// EXIT Menu Item
 		JMenuItem exit = new JMenuItem("Exit");
 		exit.setAccelerator(
@@ -163,11 +227,32 @@ public class JNotePad extends JFrame{
 		});
 		
 		// All Menu Items Specific to File Menu
-		JMenuItem[] menuItems = {newItem, open, save, saveAs, pageSetUp, exit};
+		JMenuItem[] menuItems = {newItem, 
+								open, 
+								save, 
+								saveAs, 
+								pageSetUp, 
+								print, 
+								exit};
 		
 		// Return all Menu Items Specific to File Menu
 		return menuItems;
 		
+	}
+	
+	public String openDocument(){
+		int result = openFileChooser.showOpenDialog(this);
+		
+		if(result == JFileChooser.APPROVE_OPTION){
+			currentWorkingFile = openFileChooser.getSelectedFile();
+			return readFile(currentWorkingFile);
+		}else{
+			return null;
+		}
+	}
+	
+	public void loadDataToPad(String data){
+		pad.setText(data);
 	}
 	
 	public void saveDocument(){
@@ -192,6 +277,8 @@ public class JNotePad extends JFrame{
 		}else{
 			writeFile(currentWorkingFile);
 		}
+		
+		
 	}
 	
 	public void saveAsDocument(){
@@ -233,15 +320,33 @@ public class JNotePad extends JFrame{
 			FileWriter writer = new FileWriter(file);
 			writer.write(pad.getText());
 			writer.close();
+			changed = false;
 		}catch(IOException e){
 			System.out.println(e);
 		}
 	
 	}
 	
+	public String readFile(File file){
+		try{
+			FileReader reader = new FileReader(file);
+			
+			int bufferSize = (int)Math.pow(2, 20);
+			
+			char[] dataBuffer = new char[bufferSize];
+			
+			while(reader.read(dataBuffer) > 0){}
+			
+			String data= new String(dataBuffer);
+			return data;
+		}catch(IOException e){
+			return null;
+		}
+	}
+	
 	public void addMenuItemsToFileMenu(JMenu menu, JMenuItem[] items){
 		for(int i = 0; i < items.length; i++){
-			if(i == 4 || i == 5){
+			if(i == 4 || i == 6){
 				menu.addSeparator();
 			}
 			
@@ -262,6 +367,16 @@ public class JNotePad extends JFrame{
 		for(int i = 0; i < menus.length; i++){
 			menuBar.add(menus[i]);
 		}
+	}
+	
+	public int askUserToSaveDoc(){
+		int result = JOptionPane.showConfirmDialog(this,
+									"Do you want to save changes to this file?",
+									this.getTitle(),
+									JOptionPane.YES_NO_CANCEL_OPTION,
+									JOptionPane.QUESTION_MESSAGE);
+									
+		return result;
 	}
 
 	public static void main(String[] args){
