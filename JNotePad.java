@@ -1,9 +1,23 @@
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.event.*;
 import java.io.*;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+
+class JNotePadFileFilter extends FileFilter{
+	public boolean accept(File file){
+		if(file.getName().endsWith(".txt")){return true;}
+		if(file.getName().endsWith(".java")){return true;}
+		if(file.isDirectory()){return true;}
+		
+		return false;
+	}
+	public String getDescription(){
+		return "Text Files and Java Source Files";
+	}
+}
 
 public class JNotePad extends JFrame{
 
@@ -26,7 +40,9 @@ public class JNotePad extends JFrame{
 		
 		// Initialize JFileChooser Objects
 		saveFileChooser = new JFileChooser(System.getProperty("user.dir"));
+		saveFileChooser.setFileFilter(new JNotePadFileFilter());
 		openFileChooser = new JFileChooser(System.getProperty("user.dir"));
+		openFileChooser.setFileFilter(new JNotePadFileFilter());
 		
 		// Initializes the JFrame
 		setTitle("JNotePad");
