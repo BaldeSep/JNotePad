@@ -198,12 +198,8 @@ public class JNotePad extends JFrame{
 			KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_MASK));
 		open.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae){
-				String data = openDocument();
-				if(data != null){
-					loadDataToPad(data);
-				}else{
-					
-				}
+				File file = openDocument();
+				loadDataToPad(file);
 			}
 		});
 		// SAVE Menu Item
@@ -256,19 +252,26 @@ public class JNotePad extends JFrame{
 		
 	}
 	
-	public String openDocument(){
+	public File openDocument(){
 		int result = openFileChooser.showOpenDialog(this);
 		
 		if(result == JFileChooser.APPROVE_OPTION){
 			currentWorkingFile = openFileChooser.getSelectedFile();
-			return readFile(currentWorkingFile);
+			return currentWorkingFile;
 		}else{
 			return null;
 		}
 	}
 	
-	public void loadDataToPad(String data){
-		pad.setText(data);
+	public void loadDataToPad(File file){
+		try{
+			FileReader fr = new FileReader(file.getPath());
+			pad.read(fr, null);
+			fr.close();
+			
+		}catch(Exception e){
+			System.out.println(e);
+		}
 	}
 	
 	public void saveDocument(){
@@ -343,22 +346,6 @@ public class JNotePad extends JFrame{
 	
 	}
 	
-	public String readFile(File file){
-		try{
-			FileReader reader = new FileReader(file);
-			
-			int bufferSize = (int)Math.pow(2, 20);
-			
-			char[] dataBuffer = new char[bufferSize];
-			
-			while(reader.read(dataBuffer) > 0){}
-			
-			String data= new String(dataBuffer);
-			return data;
-		}catch(IOException e){
-			return null;
-		}
-	}
 	
 	public void addMenuItemsToFileMenu(JMenu menu, JMenuItem[] items){
 		for(int i = 0; i < items.length; i++){
